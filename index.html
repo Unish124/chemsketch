@@ -1,0 +1,1509 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChemSketch — Structural Formula Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #5ce1a0;
+    --accent2: #4fb8ff;
+    --accent3: #ff6b6b;
+    --text: #e8ecf4;
+    --text2: #8a95b0;
+    --canvas-bg: #f8f7f2;
+    --canvas-lines: #e8e5dc;
+    --ink: #1a1a2e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    color: #0d0f14;
+  }
+
+  .logo h1 {
+    font-size: 18px; font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .header-tools {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .tool-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tool-btn.active { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+  .tool-btn.danger:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  .main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Left panel */
+  .left-panel {
+    width: 200px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    gap: 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 0 4px;
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+  .panel-label:first-child { margin-top: 0; }
+
+  .atom-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .atom-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .atom-btn.active { background: rgba(79,184,255,0.12); border-color: var(--accent2); color: var(--accent2); }
+  .atom-badge {
+    background: var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+  /* Canvas area */
+  .canvas-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .canvas-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .mode-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mode-btn.active { background: rgba(92,225,160,0.12); border-color: var(--accent); color: var(--accent); }
+
+  .sep { width: 1px; height: 24px; background: var(--border); }
+
+  .color-pick {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    padding: 0;
+    background: var(--ink);
+  }
+
+  .stroke-pick {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    width: 60px;
+  }
+
+  canvas#drawCanvas {
+    flex: 1;
+    display: block;
+    background: var(--canvas-bg);
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  /* Right panel */
+  .right-panel {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .formula-display {
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+
+  .formula-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .formula-box label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .formula-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    word-break: break-all;
+    line-height: 1.6;
+    min-height: 40px;
+  }
+
+  textarea#editArea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+  }
+  textarea#editArea:focus { border-color: var(--accent2); }
+
+  .copy-btn {
+    background: linear-gradient(135deg, var(--accent), #3dc980);
+    border: none;
+    color: #0d0f14;
+    padding: 11px;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    letter-spacing: 0.3px;
+  }
+  .copy-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(92,225,160,0.3); }
+  .copy-btn:active { transform: translateY(0); }
+  .copy-btn.copied { background: linear-gradient(135deg, var(--accent2), #3a9fd4); }
+
+  .hint-box {
+    background: rgba(79,184,255,0.06);
+    border: 1px solid rgba(79,184,255,0.2);
+    border-radius: 8px;
+    padding: 11px 13px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .hint-box strong { color: var(--accent2); }
+
+  .nodes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .node-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.1s;
+  }
+  .node-item:hover { border-color: var(--accent3); }
+  .node-item .ni-label { color: var(--text); font-weight: 500; }
+  .node-item .ni-del { margin-left: auto; color: var(--accent3); font-size: 14px; opacity: 0.6; }
+  .node-item:hover .ni-del { opacity: 1; }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text2);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .empty-state .big { font-size: 32px; margin-bottom: 8px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--accent);
+    color: #0d0f14;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">CH</div>
+    <h1>Chem<span>Sketch</span></h1>
+  </div>
+  <div class="header-tools">
+    <button class="tool-btn" onclick="undoLast()">↩ Undo</button>
+    <button class="tool-btn danger" onclick="clearAll()">✕ Clear</button>
+    <button class="tool-btn" onclick="recognizeStructure()">⚡ Recognize</button>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Left: atom palette -->
+  <div class="left-panel">
+    <div class="panel-label">Drawing Mode</div>
+    <button class="atom-btn active" id="modeAtom" onclick="setMode('atom')">✏️ Place Atom</button>
+    <button class="atom-btn" id="modeBond" onclick="setMode('bond')">— Draw Bond</button>
+    <button class="atom-btn" id="modeFree" onclick="setMode('free')">🖊 Freehand</button>
+    <button class="atom-btn" id="modeErase" onclick="setMode('erase')">⌫ Erase Node</button>
+    <button class="atom-btn" id="modeSelect" onclick="setMode('select')">⬚ Select Area</button>
+
+    <div class="divider"></div>
+    <div class="panel-label">Atom / Group</div>
+
+    <button class="atom-btn" onclick="selectAtom('C')"><span>C</span><span class="atom-badge">carbon</span></button>
+    <button class="atom-btn" onclick="selectAtom('CH₃')"><span>CH₃</span></button>
+    <button class="atom-btn" onclick="selectAtom('CH₂')"><span>CH₂</span></button>
+    <button class="atom-btn" onclick="selectAtom('CH')"><span>CH</span></button>
+    <button class="atom-btn" onclick="selectAtom('H')"><span>H</span><span class="atom-badge">hydrogen</span></button>
+    <button class="atom-btn" onclick="selectAtom('O')"><span>O</span><span class="atom-badge">oxygen</span></button>
+    <button class="atom-btn" onclick="selectAtom('N')"><span>N</span><span class="atom-badge">nitrogen</span></button>
+    <button class="atom-btn" onclick="selectAtom('Br')"><span>Br</span></button>
+    <button class="atom-btn" onclick="selectAtom('Cl')"><span>Cl</span></button>
+    <button class="atom-btn" onclick="selectAtom('F')"><span>F</span></button>
+    <button class="atom-btn" onclick="selectAtom('NO₂')"><span>NO₂</span></button>
+    <button class="atom-btn" onclick="selectAtom('OH')"><span>OH</span></button>
+    <button class="atom-btn" onclick="selectAtom('NH₂')"><span>NH₂</span></button>
+    <button class="atom-btn" onclick="selectAtom('COOH')"><span>COOH</span></button>
+    <button class="atom-btn" onclick="selectAtom('CHO')"><span>CHO</span></button>
+    <button class="atom-btn" onclick="selectAtom('custom')" id="customAtomBtn"><span>+</span><span class="atom-badge">custom</span></button>
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <span style="font-size:12px;color:var(--text2);font-weight:500">Bond:</span>
+      <button class="mode-btn active" id="bondSingle" onclick="setBondType('single')">Single —</button>
+      <button class="mode-btn" id="bondDouble" onclick="setBondType('double')">=  Double</button>
+      <button class="mode-btn" id="bondTriple" onclick="setBondType('triple')">≡  Triple</button>
+      <div class="sep"></div>
+      <label style="font-size:12px;color:var(--text2)">Ink:</label>
+      <input type="color" class="color-pick" id="inkColor" value="#1a1a2e" onchange="updateInk()">
+      <select class="stroke-pick" id="strokeWidth" onchange="updateStroke()">
+        <option value="2">2px</option>
+        <option value="3" selected>3px</option>
+        <option value="4">4px</option>
+        <option value="6">6px</option>
+      </select>
+      <div class="sep"></div>
+      <span style="font-size:11px;color:var(--text2)" id="modeIndicator">Mode: Place Atom</span>
+    </div>
+    <canvas id="drawCanvas"></canvas>
+  </div>
+
+  <!-- Right: output -->
+  <div class="right-panel">
+    <div class="panel-header">
+      <span>Formula Output</span>
+      <div class="status-dot"></div>
+    </div>
+    <div class="formula-display">
+
+      <div class="formula-box">
+        <label>① Linear Condensed Formula</label>
+        <div class="formula-text" id="formulaLinear">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Edit Linear Formula</div>
+        <textarea id="editLinear" placeholder="Linear formula will appear here…"></textarea>
+      </div>
+      <button class="copy-btn" id="copyLinearBtn" onclick="copyLinear()">
+        <span>⎘</span> Copy Linear Formula
+      </button>
+
+      <div class="divider"></div>
+
+      <div class="formula-box" style="padding:10px">
+        <label>② Structural Formula Image</label>
+        <canvas id="structCanvas" style="width:100%;border-radius:6px;background:#fff;display:block;margin-top:6px"></canvas>
+        <div id="structEmpty" style="text-align:center;padding:18px;color:var(--text2);font-size:12px">Hit ⚡ Recognize to render</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="copy-btn" id="saveImgBtn" onclick="saveStructImage(false)" style="flex:1;min-width:120px;background:linear-gradient(135deg,var(--accent2),#3a9fd4)">
+          <span>↓</span> Save PNG
+        </button>
+        <button class="copy-btn" id="saveTranspBtn" onclick="saveStructImage(true)" style="flex:1;min-width:120px;background:linear-gradient(135deg,#f97316,#dc2626)" title="Transparent background, red ink">
+          <span>↓</span> Save Transparent
+        </button>
+        <button class="copy-btn" id="copyImgBtn" onclick="copyStructImage(false)" style="flex:1;min-width:120px;background:linear-gradient(135deg,#a78bfa,#7c3aed)">
+          <span>⎘</span> Copy PNG
+        </button>
+        <button class="copy-btn" id="copyTranspBtn" onclick="copyStructImage(true)" style="flex:1;min-width:120px;background:linear-gradient(135deg,#f97316,#dc2626)" title="Copy transparent, red ink">
+          <span>⎘</span> Copy Transparent
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text2);margin-bottom:6px">Structure Nodes</div>
+      <div class="nodes-list" id="nodesList">
+        <div class="empty-state"><div class="big">⬡</div>Place atoms on canvas<br>then connect with bonds</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<!-- Selection popup -->
+<div id="selPopup" style="
+  display:none;
+  position:fixed;
+  background:#1a1e2a;
+  border:1px solid #ff6b6b;
+  border-radius:10px;
+  padding:10px 14px;
+  z-index:500;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  display:none;
+  align-items:center;
+  gap:10px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;
+  color:#e8ecf4;
+  pointer-events:all;
+">
+  <span id="selCount" style="color:#8a95b0"></span>
+  <button onclick="deleteSelected()" style="
+    background:#ff6b6b;border:none;color:#0d0f14;
+    padding:6px 14px;border-radius:6px;font-weight:600;
+    font-family:'Space Grotesk',sans-serif;font-size:13px;cursor:pointer;
+  ">✕ Delete</button>
+  <button onclick="clearSelection()" style="
+    background:#252a38;border:1px solid #252a38;color:#8a95b0;
+    padding:6px 12px;border-radius:6px;font-weight:500;
+    font-family:'Space Grotesk',sans-serif;font-size:13px;cursor:pointer;
+  ">Cancel</button>
+</div>
+
+<script>
+// ===================== STATE =====================
+const canvas = document.getElementById('drawCanvas');
+const ctx = canvas.getContext('2d');
+
+let mode = 'atom';          // 'atom' | 'bond' | 'free' | 'erase'
+let bondType = 'single';
+let selectedAtom = 'C';
+let inkColor = '#1a1a2e';
+let strokeWidth = 3;
+
+let nodes = [];             // {id, label, x, y}
+let bonds = [];             // {from, to, type}
+let freeStrokes = [];       // [{pts:[], color, width}]
+let currentStroke = null;
+
+let dragging = false;
+let bondStart = null;       // node id
+let dragFrom = null;        // {x,y}
+
+// Selection state
+let selRect = null;         // {x1,y1,x2,y2} during drag
+let selectedIds = new Set();// currently selected node ids
+let selectedStrokeIds = new Set(); // indices of selected freeStrokes
+
+// Undo history
+let history = [];           // stack of snapshots
+const MAX_HISTORY = 50;
+
+let nextId = 1;
+
+// ===================== RESIZE =====================
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight - canvas.previousElementSibling.offsetHeight;
+  redraw();
+}
+window.addEventListener('resize', resizeCanvas);
+setTimeout(resizeCanvas, 50);
+
+// ===================== MODES =====================
+function setMode(m) {
+  clearSelection();
+  mode = m;
+  ['modeAtom','modeBond','modeFree','modeErase','modeSelect'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.classList.remove('active');
+  });
+  const btnId = 'mode'+m.charAt(0).toUpperCase()+m.slice(1);
+  const btn = document.getElementById(btnId); if(btn) btn.classList.add('active');
+  const labels = {atom:'Place Atom', bond:'Draw Bond', free:'Freehand Draw', erase:'Erase Node', select:'Select Area'};
+  document.getElementById('modeIndicator').textContent = 'Mode: ' + (labels[m]||m);
+  canvas.style.cursor = m==='erase' ? 'not-allowed' : m==='select' ? 'default' : m==='bond' ? 'crosshair' : 'cell';
+}
+
+function setBondType(t) {
+  bondType = t;
+  ['bondSingle','bondDouble','bondTriple'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('bond'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active');
+}
+
+function selectAtom(a) {
+  if (a === 'custom') {
+    const v = prompt('Enter custom atom/group:', 'CH₂CH₃');
+    if (v) { selectedAtom = v; document.getElementById('customAtomBtn').querySelector('span').textContent = v; }
+    return;
+  }
+  selectedAtom = a;
+  setMode('atom');
+}
+
+function updateInk() { inkColor = document.getElementById('inkColor').value; }
+function updateStroke() { strokeWidth = parseInt(document.getElementById('strokeWidth').value); }
+
+// ===================== HIT TEST =====================
+function hitNode(x, y, r=18) {
+  for (let n of nodes) {
+    const dx = n.x-x, dy = n.y-y;
+    if (Math.sqrt(dx*dx+dy*dy) < r) return n;
+  }
+  return null;
+}
+
+// ===================== CANVAS EVENTS =====================
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: src.clientX - r.left, y: src.clientY - r.top };
+}
+
+canvas.addEventListener('mousedown', onDown);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); onDown(e); }, {passive:false});
+canvas.addEventListener('mousemove', onMove);
+canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, {passive:false});
+canvas.addEventListener('mouseup', onUp);
+canvas.addEventListener('touchend', e => { e.preventDefault(); onUp(e); }, {passive:false});
+
+function onDown(e) {
+  const {x,y} = getPos(e);
+  dragging = true;
+  dragFrom = {x,y};
+
+  if (mode === 'select') {
+    clearSelection();
+    selRect = {x1:x, y1:y, x2:x, y2:y};
+    redraw();
+    return;
+  }
+
+  if (mode === 'atom') {
+    const hit = hitNode(x,y);
+    if (hit) {
+      // Dragging from an existing atom → start a bond
+      bondStart = hit;
+    } else {
+      saveHistory();
+      const id = nextId++;
+      nodes.push({id, label: selectedAtom, x, y});
+      updateNodesList();
+      redraw();
+    }
+  } else if (mode === 'bond') {
+    bondStart = hitNode(x,y);
+  } else if (mode === 'free') {
+    saveHistory();
+    currentStroke = {pts:[{x,y}], color: inkColor, width: strokeWidth};
+  } else if (mode === 'erase') {
+    const hit = hitNode(x,y);
+    if (hit) {
+      saveHistory();
+      nodes = nodes.filter(n => n.id !== hit.id);
+      bonds = bonds.filter(b => b.from !== hit.id && b.to !== hit.id);
+      updateNodesList();
+      redraw();
+    }
+  }
+}
+
+function onMove(e) {
+  if (!dragging) return;
+  const {x,y} = getPos(e);
+  if (mode === 'select' && selRect) {
+    selRect.x2 = x; selRect.y2 = y;
+    redraw();
+    return;
+  }
+  if (mode === 'free' && currentStroke) {
+    currentStroke.pts.push({x,y});
+    redraw();
+    drawStroke(currentStroke);
+  } else if (bondStart) {
+    redraw();
+    // Highlight target node if hovered
+    const hover = hitNode(x, y);
+    ctx.save();
+    ctx.strokeStyle = '#5ce1a0';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    ctx.moveTo(bondStart.x, bondStart.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    if (hover && hover.id !== bondStart.id) {
+      ctx.setLineDash([]);
+      ctx.strokeStyle = '#5ce1a0';
+      ctx.lineWidth = 2.5;
+      const w = ctx.measureText(hover.label).width + 16;
+      roundRect(ctx, hover.x - w/2, hover.y - 14, w, 28, 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function onUp(e) {
+  if (!dragging) return;
+  dragging = false;
+  const pos = e.touches && e.touches.length===0 && e.changedTouches
+    ? (() => { const r=canvas.getBoundingClientRect(); return {x: e.changedTouches[0].clientX-r.left, y: e.changedTouches[0].clientY-r.top}; })()
+    : getPos(e);
+
+  if (mode === 'select' && selRect) {
+    const rx1 = Math.min(selRect.x1, selRect.x2);
+    const rx2 = Math.max(selRect.x1, selRect.x2);
+    const ry1 = Math.min(selRect.y1, selRect.y2);
+    const ry2 = Math.max(selRect.y1, selRect.y2);
+    // Only select if rect has meaningful size
+    if (rx2 - rx1 > 5 || ry2 - ry1 > 5) {
+      selectedIds = new Set(nodes.filter(n => n.x>=rx1 && n.x<=rx2 && n.y>=ry1 && n.y<=ry2).map(n => n.id));
+      // Also select freehand strokes whose bounding box overlaps the selection rect
+      selectedStrokeIds = new Set();
+      freeStrokes.forEach((s, i) => {
+        const bb = strokeBBox(s);
+        if (bb.x2 >= rx1 && bb.x1 <= rx2 && bb.y2 >= ry1 && bb.y1 <= ry2) selectedStrokeIds.add(i);
+      });
+    }
+    selRect = null;
+    redraw();
+    if (selectedIds.size > 0 || selectedStrokeIds.size > 0) showSelPopup(pos.x, pos.y);
+    return;
+  }
+
+  if (bondStart) {
+    const end = hitNode(pos.x, pos.y);
+    if (end && end.id !== bondStart.id) {
+      saveHistory();
+      const exists = bonds.find(b => (b.from===bondStart.id && b.to===end.id)||(b.from===end.id && b.to===bondStart.id));
+      if (exists) { exists.type = bondType; }
+      else { bonds.push({from: bondStart.id, to: end.id, type: bondType}); }
+    }
+    bondStart = null;
+    redraw();
+  } else if (mode === 'free' && currentStroke) {
+    if (currentStroke.pts.length > 1) freeStrokes.push(currentStroke);
+    currentStroke = null;
+    redraw();
+  }
+}
+
+// ===================== DRAW =====================
+function redraw() {
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+
+  // Graph paper lines
+  ctx.save();
+  ctx.strokeStyle = '#e8e5dc';
+  ctx.lineWidth = 0.5;
+  for (let x=0; x<canvas.width; x+=28) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+  for (let y=0; y<canvas.height; y+=28) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+  ctx.restore();
+
+  // Selection rectangle (while dragging)
+  if (selRect) {
+    const rx = Math.min(selRect.x1, selRect.x2);
+    const ry = Math.min(selRect.y1, selRect.y2);
+    const rw = Math.abs(selRect.x2 - selRect.x1);
+    const rh = Math.abs(selRect.y2 - selRect.y1);
+    ctx.save();
+    ctx.fillStyle = 'rgba(79,184,255,0.08)';
+    ctx.strokeStyle = '#4fb8ff';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5,3]);
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.strokeRect(rx, ry, rw, rh);
+    ctx.restore();
+  }
+
+  // Free strokes
+  freeStrokes.forEach((s, i) => drawStroke(s, selectedStrokeIds.has(i)));
+
+  // Bonds
+  bonds.forEach(b => {
+    const a = nodes.find(n=>n.id===b.from);
+    const z = nodes.find(n=>n.id===b.to);
+    if (!a||!z) return;
+    drawBond(a.x,a.y,z.x,z.y,b.type);
+  });
+
+  // Nodes
+  nodes.forEach(n => {
+    const isSelected = selectedIds.has(n.id);
+    const w = ctx.measureText(n.label).width + 16;
+    const h = 28;
+    ctx.save();
+    ctx.fillStyle = isSelected ? 'rgba(255,107,107,0.12)' : '#fff';
+    ctx.strokeStyle = isSelected ? '#ff6b6b' : '#1a1a2e';
+    ctx.lineWidth = isSelected ? 2.5 : 2;
+    ctx.shadowColor = isSelected ? 'rgba(255,107,107,0.3)' : 'rgba(0,0,0,0.08)';
+    ctx.shadowBlur = isSelected ? 10 : 6;
+    roundRect(ctx, n.x-w/2, n.y-h/2, w, h, 6);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = isSelected ? '#ff6b6b' : '#1a1a2e';
+    ctx.font = 'bold 14px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+    ctx.restore();
+  });
+}
+
+function drawStroke(s, highlight=false) {
+  if (s.pts.length < 2) return;
+  ctx.save();
+  if (highlight) {
+    ctx.strokeStyle = 'rgba(255,107,107,0.55)';
+    ctx.lineWidth = s.width + 6;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(s.pts[0].x, s.pts[0].y);
+    for (let i=1;i<s.pts.length;i++) ctx.lineTo(s.pts[i].x, s.pts[i].y);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = s.color;
+  ctx.lineWidth = s.width;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(s.pts[0].x, s.pts[0].y);
+  for (let i=1;i<s.pts.length;i++) ctx.lineTo(s.pts[i].x, s.pts[i].y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function strokeBBox(s) {
+  const xs = s.pts.map(p => p.x), ys = s.pts.map(p => p.y);
+  return { x1: Math.min(...xs), y1: Math.min(...ys), x2: Math.max(...xs), y2: Math.max(...ys) };
+}
+
+function drawBond(x1,y1,x2,y2,type) {
+  const dx = x2-x1, dy = y2-y1;
+  const len = Math.sqrt(dx*dx+dy*dy);
+  if (len < 1) return;
+  const nx = -dy/len*3, ny = dx/len*3;
+
+  ctx.save();
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineCap = 'round';
+
+  if (type === 'single') {
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  } else if (type === 'double') {
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x1+nx,y1+ny); ctx.lineTo(x2+nx,y2+ny); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1-nx,y1-ny); ctx.lineTo(x2-nx,y2-ny); ctx.stroke();
+  } else if (type === 'triple') {
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    const nx2=nx*2.2, ny2=ny*2.2;
+    ctx.beginPath(); ctx.moveTo(x1+nx2,y1+ny2); ctx.lineTo(x2+nx2,y2+ny2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1-nx2,y1-ny2); ctx.lineTo(x2-nx2,y2-ny2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function roundRect(ctx,x,y,w,h,r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+// ===================== UNDO =====================
+function saveHistory() {
+  history.push({
+    nodes: JSON.parse(JSON.stringify(nodes)),
+    bonds: JSON.parse(JSON.stringify(bonds)),
+    freeStrokes: JSON.parse(JSON.stringify(freeStrokes)),
+  });
+  if (history.length > MAX_HISTORY) history.shift();
+}
+
+function undoLast() {
+  if (history.length === 0) { showToast('Nothing to undo'); return; }
+  const snap = history.pop();
+  nodes = snap.nodes;
+  bonds = snap.bonds;
+  freeStrokes = snap.freeStrokes;
+  nextId = nodes.length > 0 ? Math.max(...nodes.map(n => n.id)) + 1 : 1;
+  clearSelection();
+  updateNodesList();
+  redraw();
+  showToast('Undo');
+}
+
+function clearAll() {
+  if (!confirm('Clear the entire drawing?')) return;
+  nodes=[]; bonds=[]; freeStrokes=[];
+  document.getElementById('formulaLinear').textContent = '—';
+  document.getElementById('editLinear').value = '';
+  const sc = document.getElementById('structCanvas');
+  const sctx = sc.getContext('2d');
+  sctx.clearRect(0,0,sc.width,sc.height);
+  sc.style.display = 'none';
+  document.getElementById('structEmpty').style.display = 'block';
+  updateNodesList(); redraw();
+}
+
+// ===================== NODES LIST UI =====================
+function updateNodesList() {
+  const el = document.getElementById('nodesList');
+  if (nodes.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="big">⬡</div>Place atoms on canvas<br>then connect with bonds</div>';
+    return;
+  }
+  el.innerHTML = nodes.map(n => `
+    <div class="node-item" onclick="deleteNode(${n.id})">
+      <span class="ni-label">${n.label}</span>
+      <span style="color:var(--text2);font-size:11px">(${Math.round(n.x)},${Math.round(n.y)})</span>
+      <span class="ni-del">✕</span>
+    </div>
+  `).join('');
+}
+
+function deleteNode(id) {
+  saveHistory();
+  nodes = nodes.filter(n => n.id !== id);
+  bonds = bonds.filter(b => b.from!==id && b.to!==id);
+  updateNodesList(); redraw();
+}
+
+// ===================== RECOGNITION =====================
+function recognizeStructure() {
+  if (nodes.length === 0) { showToast('No atoms placed yet!'); return; }
+
+  // Build adjacency with bond types
+  const adj = {};
+  nodes.forEach(n => { adj[n.id] = []; });
+  bonds.forEach(b => {
+    adj[b.from].push({id: b.to,   type: b.type});
+    adj[b.to  ].push({id: b.from, type: b.type});
+  });
+
+  // ── Linear condensed formula ─────────────────────────────────────────────
+  // Use longest carbon chain for the linear form only
+  const chain = findLongestPath();
+  let linear = '—';
+  if (chain.length > 0) {
+    let parts = [];
+    chain.forEach((nid, idx) => {
+      const node = nodes.find(n => n.id === nid);
+      const prev = idx > 0 ? chain[idx-1] : null;
+      const next = idx < chain.length-1 ? chain[idx+1] : null;
+      const subs = adj[nid]
+        .filter(e => e.id !== prev && e.id !== next)
+        .map(e => collectBranch(e.id, nid, adj));
+      let part = node.label;
+      subs.forEach(s => { part += '(' + s + ')'; });
+      parts.push(part);
+    });
+    linear = '';
+    parts.forEach((p, i) => {
+      linear += p;
+      if (i < parts.length - 1) {
+        const a = chain[i], b2 = chain[i+1];
+        const bond = bonds.find(b => (b.from===a&&b.to===b2)||(b.from===b2&&b.to===a));
+        linear += bond && bond.type==='double' ? '=' : bond && bond.type==='triple' ? '≡' : '–';
+      }
+    });
+  } else if (nodes.length > 0) {
+    linear = nodes.map(n => n.label).join('–');
+  }
+
+  document.getElementById('formulaLinear').textContent = linear;
+  document.getElementById('editLinear').value = linear;
+  renderStructImage();
+}
+
+function collectBranch(startId, fromId, adj) {
+  // Simple DFS to collect branch label
+  const visited = new Set([fromId]);
+  const result = [];
+  function dfs(id) {
+    visited.add(id);
+    const node = nodes.find(n => n.id===id);
+    result.push(node.label);
+    adj[id].forEach(e => {
+      if (!visited.has(e.id)) dfs(e.id);
+    });
+  }
+  dfs(startId);
+  return result.join('');
+}
+
+// Heteroatoms that should be treated as substituents, not main chain members
+const HETEROATOMS = new Set(['N','O','Br','Cl','F','I','S','P','NO₂','OH','NH₂','NH','SH','SO₃H','CHO','COOH']);
+
+function isCarbonNode(id) {
+  const n = nodes.find(n => n.id === id);
+  if (!n) return false;
+  const l = n.label.trim();
+  // Carbon-based: starts with C, or is CH, CH2, CH3, C=O, etc.
+  return /^C/i.test(l) && !HETEROATOMS.has(l);
+}
+
+function findLongestPath() {
+  if (nodes.length === 0) return [];
+
+  const adj = {};
+  nodes.forEach(n => { adj[n.id] = []; });
+  bonds.forEach(b => {
+    adj[b.from].push(b.to);
+    adj[b.to].push(b.from);
+  });
+
+  // Only traverse carbon nodes for the main chain
+  const carbonIds = nodes.filter(n => isCarbonNode(n.id)).map(n => n.id);
+
+  // If no carbon nodes at all, fall back to all nodes
+  const chainCandidates = carbonIds.length > 0 ? carbonIds : nodes.map(n => n.id);
+
+  // BFS restricted to carbon nodes only
+  function bfsCarbon(start) {
+    const dist = {[start]: 0};
+    const queue = [start];
+    let farthest = start;
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const nb of adj[cur]) {
+        // only traverse carbon nodes
+        if (!(nb in dist) && (carbonIds.length === 0 || isCarbonNode(nb))) {
+          dist[nb] = dist[cur] + 1;
+          queue.push(nb);
+          if (dist[nb] > dist[farthest]) farthest = nb;
+        }
+      }
+    }
+    return { farthest, dist };
+  }
+
+  const { farthest: end1 } = bfsCarbon(chainCandidates[0]);
+  const { farthest: end2 } = bfsCarbon(end1);
+
+  // Reconstruct path between end1 and end2 through carbon nodes only
+  const prev = {};
+  const q2 = [end1];
+  const vis = { [end1]: true };
+  while (q2.length) {
+    const cur = q2.shift();
+    for (const nb of adj[cur]) {
+      if (!vis[nb] && (carbonIds.length === 0 || isCarbonNode(nb))) {
+        vis[nb] = true;
+        prev[nb] = cur;
+        q2.push(nb);
+      }
+    }
+  }
+
+  const path = [];
+  let cur = end2;
+  while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
+
+  // Orient left-to-right by canvas x position
+  const nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
+  const xFirst = nodeMap[path[0]] ? nodeMap[path[0]].x : 0;
+  const xLast  = nodeMap[path[path.length - 1]] ? nodeMap[path[path.length - 1]].x : 0;
+  if (xFirst > xLast) path.reverse();
+
+  return path;
+}
+
+// ===================== STRUCTURAL FORMULA FROM CANVAS POSITIONS =====================
+function buildStructuralFromPositions() {
+  if (nodes.length === 0) return '—';
+
+  // ── Step 0: normalise positions using bond geometry ──────────────────────
+  // For each bond, decide if the two endpoints are "mostly horizontal",
+  // "mostly vertical", or "diagonal" based on the actual pixel delta.
+  // If mostly horizontal → force both nodes to the same averaged Y.
+  // If mostly vertical   → force both nodes to the same averaged X.
+  // This corrects for slight drawing misalignment.
+  const normY = {}; // id → normalised y
+  const normX = {}; // id → normalised x
+  nodes.forEach(n => { normY[n.id] = n.y; normX[n.id] = n.x; });
+
+  bonds.forEach(b => {
+    const na = nodes.find(n => n.id === b.from);
+    const nb = nodes.find(n => n.id === b.to);
+    if (!na || !nb) return;
+    const dx = Math.abs(na.x - nb.x);
+    const dy = Math.abs(na.y - nb.y);
+    if (dx === 0 && dy === 0) return;
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI; // 0=horizontal, 90=vertical
+    if (angle < 30) {
+      // Mostly horizontal → align Y
+      const midY = (na.y + nb.y) / 2;
+      normY[na.id] = midY; normY[nb.id] = midY;
+    } else if (angle > 60) {
+      // Mostly vertical → align X
+      const midX = (na.x + nb.x) / 2;
+      normX[na.id] = midX; normX[nb.id] = midX;
+    }
+    // else diagonal: keep original
+  });
+
+  const xs = nodes.map(n => normX[n.id]);
+  const ys = nodes.map(n => normY[n.id]);
+
+  // ── Step 1: snap normalised positions to a grid ──────────────────────────
+  const SNAP = 55;
+
+  function snapValues(vals, snap) {
+    const sorted = [...new Set(vals.map(v => Math.round(v)))].sort((a,b) => a-b);
+    const groups = [];
+    sorted.forEach(v => {
+      const last = groups[groups.length-1];
+      if (last === undefined || v - last[last.length-1] > snap) groups.push([v]);
+      else last.push(v);
+    });
+    const map = {};
+    groups.forEach((g, gi) => g.forEach(v => { map[v] = gi; }));
+    return { map, count: groups.length };
+  }
+
+  const roundedXs = xs.map(v => Math.round(v));
+  const roundedYs = ys.map(v => Math.round(v));
+  const { map: colMap, count: cols } = snapValues(roundedXs, SNAP);
+  const { map: rowMap, count: rows } = snapValues(roundedYs, SNAP);
+
+  const gridNodes = nodes.map((n, i) => ({
+    ...n,
+    col: colMap[roundedXs[i]],
+    row: rowMap[roundedYs[i]],
+  }));
+
+  // ── Step 2: column character widths ──────────────────────────────────────
+  const colWidths = Array(cols).fill(1);
+  gridNodes.forEach(n => {
+    if (n.label.length > colWidths[n.col]) colWidths[n.col] = n.label.length;
+  });
+
+  const COL_GAP = 3;
+  const colStarts = [];
+  let cx = 0;
+  for (let c = 0; c < cols; c++) { colStarts.push(cx); cx += colWidths[c] + COL_GAP; }
+  const totalW = cx + 10;
+  const colCenter = colStarts.map((s, c) => s + Math.floor(colWidths[c] / 2));
+
+  // ── Step 3: build char grid ───────────────────────────────────────────────
+  const textRowCount = Math.max(1, rows * 2 - 1);
+  function makeRow() { return Array(totalW).fill(' '); }
+  const grid = Array.from({length: textRowCount}, makeRow);
+
+  function writeAt(rowIdx, charPos, str) {
+    if (rowIdx < 0 || rowIdx >= grid.length) return;
+    const start = charPos - Math.floor(str.length / 2);
+    for (let k = 0; k < str.length; k++) {
+      const idx = start + k;
+      if (idx >= 0 && idx < totalW) grid[rowIdx][idx] = str[k];
+    }
+  }
+
+  // ── Step 4: place labels ──────────────────────────────────────────────────
+  gridNodes.forEach(n => {
+    writeAt(n.row * 2, colCenter[n.col], n.label);
+  });
+
+  // ── Step 5: place bonds ───────────────────────────────────────────────────
+  const bondSymbols = { single: '—', double: '=', triple: '≡' };
+  const vertSymbols = { single: '|', double: '‖', triple: '⦀' };
+
+  bonds.forEach(b => {
+    const na = gridNodes.find(n => n.id === b.from);
+    const nb = gridNodes.find(n => n.id === b.to);
+    if (!na || !nb) return;
+
+    const dc = nb.col - na.col;
+    const dr = nb.row - na.row;
+    const bSym  = bondSymbols[b.type] || '—';
+    const bSymV = vertSymbols[b.type] || '|';
+
+    if (dr === 0 && dc !== 0) {
+      // ── Horizontal bond ──
+      const leftCol  = dc > 0 ? na.col : nb.col;
+      const rightCol = dc > 0 ? nb.col : na.col;
+      const textRow  = na.row * 2;
+      const leftEdge  = colStarts[leftCol] + colWidths[leftCol];
+      const rightEdge = colStarts[rightCol];
+      const mid = Math.floor((leftEdge + rightEdge) / 2);
+      writeAt(textRow, mid, ' ' + bSym + ' ');
+
+    } else if (dc === 0 && dr !== 0) {
+      // ── Vertical bond ──
+      const topRow  = dr > 0 ? na.row : nb.row;
+      const textRow = topRow * 2 + 1;
+      const cc = colCenter[na.col];
+      writeAt(textRow, cc, bSymV);
+
+    } else {
+      // ── Diagonal bond ──
+      const topNode  = dr < 0 ? nb : na;   // node with smaller row (top)
+      const botNode  = dr < 0 ? na : nb;
+      const textRow  = topNode.row * 2 + 1; // interleaved row between top and bottom
+      // Choose / or \ based on direction
+      const goingRight = botNode.col > topNode.col;
+      const sym = goingRight ? '\\' : '/';
+      // Place symbol: if going right, just after top node; if going left, just before top node
+      const baseCol = colCenter[topNode.col];
+      const offset  = goingRight
+        ? Math.floor(colWidths[topNode.col] / 2) + 1
+        : -(Math.floor(colWidths[topNode.col] / 2) + 1);
+      const pos = baseCol + offset;
+      if (pos >= 0 && pos < totalW && textRow >= 0 && textRow < grid.length) {
+        grid[textRow][pos] = sym === '\\' ? '\\' : '/';
+      }
+      // For double/triple diagonal, add bond type label nearby
+      if (b.type !== 'single') {
+        const labelPos = goingRight ? pos + 2 : pos - 2;
+        const label = b.type === 'double' ? '=' : '≡';
+        if (labelPos >= 0 && labelPos < totalW) grid[textRow][labelPos] = label;
+      }
+    }
+  });
+
+  // ── Step 6: to string ─────────────────────────────────────────────────────
+  const lines = grid.map(row => row.join('').trimEnd());
+  let start = 0, end = lines.length - 1;
+  while (start <= end && lines[start].trim() === '') start++;
+  while (end >= start && lines[end].trim() === '') end--;
+  return lines.slice(start, end + 1).join('\n') || '—';
+}
+
+// ===================== COPY =====================
+function doCopy(text, btnId, label) {
+  if (!text || text === '—') { showToast('Nothing to copy!'); return; }
+  const btn = document.getElementById(btnId);
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '<span>✓</span> Copied!';
+    showToast(label + ' copied!');
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = `<span>⎘</span> Copy ${label}`; }, 2000);
+  }).catch(() => { showToast('Copy failed — try selecting manually.'); });
+}
+
+function copyLinear() {
+  const text = document.getElementById('editLinear').value || document.getElementById('formulaLinear').textContent;
+  doCopy(text, 'copyLinearBtn', 'Linear Formula');
+}
+
+function copyStructural() {
+  const text = document.getElementById('editStructural').value || document.getElementById('formulaStructural').textContent;
+  doCopy(text, 'copyStructBtn', 'Structural Formula');
+}
+
+// ===================== SELECTION HELPERS =====================
+function showSelPopup(x, y) {
+  const popup = document.getElementById('selPopup');
+  const total = selectedIds.size + selectedStrokeIds.size;
+  document.getElementById('selCount').textContent = total + ' item' + (total !== 1 ? 's' : '') + ' selected';
+  popup.style.display = 'flex';
+  // Position near the drag end, but keep in viewport
+  const pw = 240, ph = 48;
+  const rect = canvas.getBoundingClientRect();
+  let px = rect.left + x + 12;
+  let py = rect.top  + y + 12;
+  if (px + pw > window.innerWidth  - 8) px = rect.left + x - pw - 8;
+  if (py + ph > window.innerHeight - 8) py = rect.top  + y - ph - 8;
+  popup.style.left = px + 'px';
+  popup.style.top  = py + 'px';
+}
+
+function clearSelection() {
+  selectedIds = new Set();
+  selectedStrokeIds = new Set();
+  selRect = null;
+  const popup = document.getElementById('selPopup');
+  if (popup) popup.style.display = 'none';
+  redraw();
+}
+
+function deleteSelected() {
+  saveHistory();
+  const count = selectedIds.size + selectedStrokeIds.size;
+  nodes = nodes.filter(n => !selectedIds.has(n.id));
+  bonds = bonds.filter(b => !selectedIds.has(b.from) && !selectedIds.has(b.to));
+  freeStrokes = freeStrokes.filter((_, i) => !selectedStrokeIds.has(i));
+  clearSelection();
+  updateNodesList();
+  redraw();
+  showToast(count + ' item' + (count !== 1 ? 's' : '') + ' deleted');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  // Ctrl+Z / Cmd+Z → undo
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault();
+    undoLast();
+    return;
+  }
+  if (e.key === 'Escape') clearSelection();
+  if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedIds.size > 0 || selectedStrokeIds.size > 0)) {
+    // Don't trigger if user is typing in a textarea
+    if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+    deleteSelected();
+  }
+});
+
+// ===================== STRUCTURAL IMAGE RENDERER =====================
+function doRenderStructImage(sc, transparent) {
+  const FONT_SIZE   = 20;
+  const LABEL_PAD_X = 12;
+  const LABEL_PAD_Y = 8;
+  const BOND_LEN    = 70;   // target rendered bond length px
+  const BOND_GAP    = 4;
+  const PAD         = 60;
+  const INK_COLOR   = transparent ? '#cc2200' : '#1a1a2e';
+
+  // Use raw canvas positions directly — no angle normalisation that might collapse bonds
+  const rawLengths = bonds.map(b => {
+    const na = nodes.find(n => n.id === b.from);
+    const nb = nodes.find(n => n.id === b.to);
+    if (!na || !nb) return 0;
+    return Math.sqrt((nb.x-na.x)**2 + (nb.y-na.y)**2);
+  }).filter(l => l > 10);
+
+  const avgRaw = rawLengths.length ? rawLengths.reduce((a,v)=>a+v,0)/rawLengths.length : 120;
+  const scale  = BOND_LEN / avgRaw;
+
+  const xs = nodes.map(n => n.x * scale);
+  const ys = nodes.map(n => n.y * scale);
+  const minX = Math.min(...xs), minY = Math.min(...ys);
+  const maxX = Math.max(...xs), maxY = Math.max(...ys);
+
+  // Map node id → rendered position
+  const pos = {};
+  nodes.forEach(n => {
+    pos[n.id] = { x: PAD + n.x * scale - minX, y: PAD + n.y * scale - minY };
+  });
+
+  const W = Math.max(240, maxX - minX + PAD * 2);
+  const H = Math.max(180, maxY - minY + PAD * 2);
+
+  const DPR = window.devicePixelRatio || 1;
+  sc.width  = W * DPR;
+  sc.height = H * DPR;
+  sc.style.width  = W + 'px';
+  sc.style.height = H + 'px';
+
+  const c = sc.getContext('2d');
+  c.clearRect(0, 0, sc.width, sc.height);
+  c.scale(DPR, DPR);
+
+  if (!transparent) {
+    c.fillStyle = '#ffffff';
+    c.fillRect(0, 0, W, H);
+  }
+
+  // Measure label sizes
+  c.font = `bold ${FONT_SIZE}px "IBM Plex Mono", monospace`;
+  const lw = {}, lh = {};
+  nodes.forEach(n => {
+    lw[n.id] = c.measureText(n.label).width / 2 + LABEL_PAD_X;
+    lh[n.id] = (FONT_SIZE) / 2 + LABEL_PAD_Y;
+  });
+
+  // Draw bonds
+  c.lineCap = 'round';
+  c.strokeStyle = INK_COLOR;
+
+  bonds.forEach(b => {
+    const na = nodes.find(n => n.id === b.from);
+    const nb = nodes.find(n => n.id === b.to);
+    if (!na || !nb) return;
+
+    const p1 = pos[na.id], p2 = pos[nb.id];
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    if (len < 2) return;
+
+    const ux = dx/len, uy = dy/len;
+    const px = -uy, py = ux; // perpendicular
+
+    // Shrink from each end by the label's projected radius along the bond direction
+    // Use the ellipse approximation: r = sqrt((lw*ux)^2 + (lh*uy)^2)
+    const shrA = Math.sqrt((lw[na.id]*ux)**2 + (lh[na.id]*uy)**2) + 2;
+    const shrB = Math.sqrt((lw[nb.id]*ux)**2 + (lh[nb.id]*uy)**2) + 2;
+
+    // Make sure there's actually bond left to draw
+    if (shrA + shrB >= len - 4) {
+      // Bond too short — draw full length (no shrink)
+      drawBondLines(c, p1.x, p1.y, p2.x, p2.y, px, py, b.type, BOND_GAP, INK_COLOR);
+      return;
+    }
+
+    const x1 = p1.x + ux * shrA, y1 = p1.y + uy * shrA;
+    const x2 = p2.x - ux * shrB, y2 = p2.y - uy * shrB;
+    drawBondLines(c, x1, y1, x2, y2, px, py, b.type, BOND_GAP, INK_COLOR);
+  });
+
+  // Draw labels on top
+  nodes.forEach(n => {
+    const {x, y} = pos[n.id];
+    const w = lw[n.id] * 2, h = lh[n.id] * 2;
+
+    if (!transparent) {
+      c.fillStyle = '#ffffff';
+      c.fillRect(x - w/2, y - h/2, w, h);
+    } else {
+      c.clearRect(x - w/2, y - h/2, w, h);
+    }
+
+    c.fillStyle = INK_COLOR;
+    c.font = `bold ${FONT_SIZE}px "IBM Plex Mono", monospace`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(n.label, x, y);
+  });
+}
+
+function drawBondLines(c, x1, y1, x2, y2, px, py, type, gap, color) {
+  c.strokeStyle = color;
+  function line(off) {
+    c.beginPath();
+    c.moveTo(x1 + px*off, y1 + py*off);
+    c.lineTo(x2 + px*off, y2 + py*off);
+    c.stroke();
+  }
+  if (type === 'single') {
+    c.lineWidth = 2.5; line(0);
+  } else if (type === 'double') {
+    c.lineWidth = 2; line(-gap); line(gap);
+  } else if (type === 'triple') {
+    c.lineWidth = 1.8; line(-gap*2); line(0); line(gap*2);
+  }
+}
+
+function renderStructImage(transparent = false) {
+  const sc = document.getElementById('structCanvas');
+  const empty = document.getElementById('structEmpty');
+  if (nodes.length === 0) {
+    sc.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  sc.style.display = 'block';
+  empty.style.display = 'none';
+  doRenderStructImage(sc, transparent);
+}
+
+function saveStructImage(transparent = false) {
+  if (nodes.length === 0) { showToast('Nothing to save!'); return; }
+  const offsc = document.createElement('canvas');
+  doRenderStructImage(offsc, transparent);
+  const link = document.createElement('a');
+  link.download = transparent ? 'structural-formula-transparent.png' : 'structural-formula.png';
+  link.href = offsc.toDataURL('image/png');
+  link.click();
+  showToast(transparent ? 'Transparent PNG saved!' : 'Image saved!');
+}
+
+function copyStructImage(transparent = false) {
+  if (nodes.length === 0) { showToast('Nothing to copy!'); return; }
+  // Render to offscreen canvas to avoid flashing the preview
+  const offsc = document.createElement('canvas');
+  doRenderStructImage(offsc, transparent);
+  offsc.toBlob(blob => {
+    try {
+      navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(() => {
+        showToast(transparent ? 'Transparent image copied!' : 'Image copied to clipboard!');
+      }).catch(() => { showToast('Copy not supported — use Save PNG instead'); });
+    } catch(e) { showToast('Copy not supported — use Save PNG instead'); }
+  });
+}
+
+function copyStructural() {
+  // kept for compatibility — copies linear formula as fallback
+  const text = document.getElementById('editLinear').value;
+  if (!text || text === '—') { showToast('Nothing to copy!'); return; }
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Init
+redraw();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"446c89706cab4067905a0d52c5b304f2","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
