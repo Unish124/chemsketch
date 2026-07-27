@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,7 +38,8 @@
   header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 20px;
     padding: 14px 24px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
@@ -71,6 +71,7 @@
 
   .header-tools {
     display: flex; align-items: center; gap: 8px;
+    margin-left: auto;
   }
 
   .tool-btn {
@@ -382,14 +383,239 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ===== Footer: copyright + Made by Unish ===== */
+  .site-footer {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text2);
+    flex-wrap: wrap;
+  }
+
+  .made-by-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: #0d0f14;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    font-size: 12px;
+    box-shadow: 0 0 0 0 rgba(92,225,160,0.5);
+    animation: madeByPulse 2s infinite;
+    transition: transform 0.15s;
+  }
+  .made-by-link:hover {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 4px 14px rgba(92,225,160,0.45);
+  }
+  @keyframes madeByPulse {
+    0% { box-shadow: 0 0 0 0 rgba(92,225,160,0.45); }
+    70% { box-shadow: 0 0 0 8px rgba(92,225,160,0); }
+    100% { box-shadow: 0 0 0 0 rgba(92,225,160,0); }
+  }
+
+  /* ===== Mobile / small-screen warning overlay ===== */
+  .screen-warning-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,15,20,0.97);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+  .screen-warning-overlay.show { display: flex; }
+  .screen-warning-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 22px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .screen-warning-card .icon {
+    font-size: 40px;
+  }
+  .screen-warning-card h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .screen-warning-card p {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .screen-warning-card .continue-btn {
+    margin-top: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .screen-warning-card .continue-btn:hover { color: var(--text); border-color: var(--accent2); }
+
+  /* ===== Zoom / UI-scale slider (top, header) ===== */
+  .zoom-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 10px;
+    margin-left: 4px;
+  }
+  .zoom-control button {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    width: 20px; height: 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .zoom-control button:hover { background: var(--border); color: var(--accent2); }
+  .zoom-control input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 90px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+  .zoom-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent2);
+    border: 2px solid #0d0f14;
+    cursor: pointer;
+  }
+  .zoom-control input[type="range"]::-moz-range-thumb {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent2);
+    border: 2px solid #0d0f14;
+    cursor: pointer;
+  }
+  .zoom-control .zoom-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ===== Sliding notification with countdown progress bar ===== */
+  .notify-toast {
+    position: fixed;
+    top: 78px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent2);
+    border-radius: 10px;
+    padding: 12px 16px 10px;
+    min-width: 260px;
+    max-width: 360px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    z-index: 9000;
+    transform: translateX(420px);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s;
+    pointer-events: none;
+  }
+  .notify-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+  .notify-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 9px;
+  }
+  .notify-content .notify-icon { font-size: 15px; flex-shrink: 0; }
+  .notify-progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .notify-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: var(--accent2);
+    border-radius: 3px;
+  }
+  @keyframes notifyShrink {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Small-screen warning popup -->
+<div class="screen-warning-overlay" id="screenWarning">
+  <div class="screen-warning-card">
+    <div class="icon">🖥️</div>
+    <h2>Best viewed on a bigger screen</h2>
+    <p>ChemSketch was developed for larger screens like a laptop or PC. Please switch to one for the best drawing experience.</p>
+    <a class="made-by-link" href="https://unishbaskota.com.np" target="_blank" rel="noopener noreferrer">⭐ Made by Unish</a>
+    <button class="continue-btn" onclick="dismissScreenWarning()">Continue anyway</button>
+  </div>
+</div>
+
+<!-- Generic info / warning popup (e.g. Freehand + Recognize) -->
+<div class="screen-warning-overlay" id="infoModal">
+  <div class="screen-warning-card">
+    <div class="icon" id="infoModalIcon">⚠️</div>
+    <h2 id="infoModalTitle">Notice</h2>
+    <p id="infoModalMsg"></p>
+    <button class="continue-btn" onclick="closeInfoModal()">OK, got it</button>
+  </div>
+</div>
 
 <header>
   <div class="logo">
     <div class="logo-icon">CH</div>
     <h1>Chem<span>Sketch</span></h1>
+  </div>
+  <div class="zoom-control" title="Adjust interface size">
+    <button onclick="zoomStep(-10)">−</button>
+    <input type="range" id="zoomRange" min="50" max="150" step="10" value="100" oninput="setZoom(this.value)">
+    <button onclick="zoomStep(10)">+</button>
+    <span class="zoom-label" id="zoomLabel">100%</span>
   </div>
   <div class="header-tools">
     <button class="tool-btn" onclick="undoLast()">↩ Undo</button>
@@ -504,7 +730,22 @@
   </div>
 </div>
 
+<!-- Footer: copyright + Made by Unish -->
+<footer class="site-footer">
+  <span>© <span id="copyrightYear"></span> ChemSketch. All rights reserved.</span>
+  <a class="made-by-link" href="https://unishbaskota.com.np" target="_blank" rel="noopener noreferrer">⭐ Made by Unish</a>
+</footer>
+
 <div class="toast" id="toast">Copied to clipboard!</div>
+
+<!-- Sliding notification with countdown progress bar (auto come-and-go) -->
+<div class="notify-toast" id="notifyToast">
+  <div class="notify-content">
+    <span class="notify-icon" id="notifyIcon">ℹ️</span>
+    <span id="notifyMsg"></span>
+  </div>
+  <div class="notify-progress-track"><div class="notify-progress-bar" id="notifyProgressBar"></div></div>
+</div>
 
 <!-- Selection popup -->
 <div id="selPopup" style="
@@ -538,6 +779,82 @@
 </div>
 
 <script>
+// ===================== FOOTER / SCREEN-SIZE CHECK =====================
+document.getElementById('copyrightYear').textContent = new Date().getFullYear();
+
+function checkScreenSize() {
+  const overlay = document.getElementById('screenWarning');
+  const isSmallScreen = window.innerWidth < 900;
+  const dismissed = sessionStorage.getItem('screenWarningDismissed') === '1';
+  if (isSmallScreen && !dismissed) {
+    overlay.classList.add('show');
+  } else {
+    overlay.classList.remove('show');
+  }
+}
+function dismissScreenWarning() {
+  sessionStorage.setItem('screenWarningDismissed', '1');
+  document.getElementById('screenWarning').classList.remove('show');
+}
+window.addEventListener('load', checkScreenSize);
+window.addEventListener('resize', checkScreenSize);
+
+// ===================== GENERIC INFO MODAL =====================
+function showInfoModal(title, msg, icon) {
+  document.getElementById('infoModalTitle').textContent = title;
+  document.getElementById('infoModalMsg').textContent = msg;
+  document.getElementById('infoModalIcon').textContent = icon || '⚠️';
+  document.getElementById('infoModal').classList.add('show');
+}
+function closeInfoModal() {
+  document.getElementById('infoModal').classList.remove('show');
+}
+
+// ===================== UI ZOOM / INTERFACE SCALE =====================
+let uiZoom = 100;
+let zoomRAF = null;
+let zoomResizeTimer = null;
+function setZoom(val) {
+  uiZoom = Math.min(150, Math.max(50, parseInt(val) || 100));
+
+  // Update the label/slider instantly — cheap, no layout cost
+  document.getElementById('zoomRange').value = uiZoom;
+  document.getElementById('zoomLabel').textContent = uiZoom + '%';
+
+  // Batch the actual (expensive) zoom style change to at most once per frame,
+  // so rapid drag events don't each force a full page reflow
+  if (zoomRAF) cancelAnimationFrame(zoomRAF);
+  zoomRAF = requestAnimationFrame(() => {
+    document.body.style.zoom = uiZoom + '%';
+  });
+
+  // The canvas redraw is the heaviest part — only run it once dragging pauses
+  clearTimeout(zoomResizeTimer);
+  zoomResizeTimer = setTimeout(resizeCanvas, 120);
+}
+function zoomStep(delta) {
+  setZoom(uiZoom + delta);
+}
+
+// ===================== SLIDING NOTIFICATION (come-and-go with countdown bar) =====================
+let notifyTimeout = null;
+function showNotification(msg, duration = 4200, icon = '⚠️') {
+  const toast = document.getElementById('notifyToast');
+  const bar = document.getElementById('notifyProgressBar');
+  document.getElementById('notifyMsg').textContent = msg;
+  document.getElementById('notifyIcon').textContent = icon;
+
+  // Reset the progress-bar animation so repeated triggers restart cleanly
+  bar.style.animation = 'none';
+  bar.style.width = '100%';
+  void bar.offsetWidth; // force reflow to restart animation
+  bar.style.animation = `notifyShrink ${duration}ms linear forwards`;
+
+  toast.classList.add('show');
+  clearTimeout(notifyTimeout);
+  notifyTimeout = setTimeout(() => { toast.classList.remove('show'); }, duration);
+}
+
 // ===================== STATE =====================
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
@@ -944,7 +1261,22 @@ function deleteNode(id) {
 
 // ===================== RECOGNITION =====================
 function recognizeStructure() {
-  if (nodes.length === 0) { showToast('No atoms placed yet!'); return; }
+  if (nodes.length === 0) {
+    if (freeStrokes.length > 0) {
+      showInfoModal(
+        'Freehand Recognize Not Supported',
+        'Currently the Freehand drawing mode does not support the Recognize feature. Please use the Place Atom option (and Draw Bond) to build your structure instead, then hit Recognize again.',
+        '✏️'
+      );
+    } else {
+      showToast('No atoms placed yet!');
+    }
+    return;
+  }
+
+  if (freeStrokes.length > 0) {
+    showNotification('Freehand drawings aren\'t recognized yet — use Place Atom + Draw Bond instead. Showing results from your atoms/bonds only.', 4200, '⚠️');
+  }
 
   // Build adjacency with bond types
   const adj = {};
@@ -1505,5 +1837,6 @@ function showToast(msg) {
 redraw();
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"446c89706cab4067905a0d52c5b304f2","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"89c0ca56886947b1972bc8bb91fbc7f4","r":1}' crossorigin="anonymous"></script>
 </body>
 </html>
